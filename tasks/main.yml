@@ -1,0 +1,50 @@
+- name: put /root/k8s-consul-config.yaml
+  template: src=k8s-consul-config.yaml dest=/root/k8s-consul-config.yaml
+
+- name: create /home/pvs
+  file: dest=/home/pvs state=directory owner=root mode=0600
+
+- name: put a consul-pv1.yaml file
+  template: src=pv1.yaml dest=/root/consul-pv1.yaml
+
+- name: check if a PV exist
+  shell: kubectl get persistentvolumes --namespace={{ consul_cluster_namespace }} | grep consul-data-1
+  register: result
+  ignore_errors: true
+
+- name: deploy a persistent volume
+  shell: kubectl create --namespace={{ consul_cluster_namespace }} -f /root/consul-pv1.yaml
+  when: result|failed
+
+- name: put a consul-pv2.yaml file
+  template: src=pv2.yaml dest=/root/consul-pv2.yaml
+
+- name: check if a PV exist
+  shell: kubectl get persistentvolumes --namespace={{ consul_cluster_namespace }} | grep consul-data-2
+  register: result
+  ignore_errors: true
+
+- name: deploy a persistent volume
+  shell: kubectl create --namespace={{ consul_cluster_namespace }} -f /root/consul-pv2.yaml
+  when: result|failed
+
+- name: put a consul-pv3.yaml file
+  template: src=pv3.yaml dest=/root/consul-pv3.yaml
+
+- name: check if a PV exist
+  shell: kubectl get persistentvolumes --namespace={{ consul_cluster_namespace }} | grep consul-data-3
+  register: result
+  ignore_errors: true
+
+- name: deploy a persistent volume
+  shell: kubectl create --namespace={{ consul_cluster_namespace }} -f /root/consul-pv3.yaml
+  when: result|failed
+
+- name: check if a Helm release for consul-cluster is present
+  shell: helm list --namespace={{ consul_cluster_namespace }} | grep consul-cluster-release
+  register: result
+  ignore_errors: true
+
+- name: install a Consul cluster using a Helm chart
+  shell: helm install -f /root/k8s-consul-config.yaml stable/consul --namespace {{ consul_cluster_namespace }} --name consul-cluster-release
+  when: result|failed

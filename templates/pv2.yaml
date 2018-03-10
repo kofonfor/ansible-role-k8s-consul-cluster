@@ -1,0 +1,14 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: consul-data-2
+  labels:
+    type: local
+spec:
+  storageClassName: consul
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/pvs/consul-cluster-pv-2"
